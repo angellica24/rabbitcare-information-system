@@ -1,0 +1,65 @@
+@startuml
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #48664C
+skinparam BorderColor #48664C
+skinparam BackgroundColor #FAFCFA
+skinparam NoteBackgroundColor #FFF7E8
+skinparam NoteBorderColor #D99A43
+left to right direction
+skinparam actorStyle awesome
+skinparam usecase {
+  BackgroundColor White
+  BorderColor #48664C
+}
+
+title Use Case - Portal Pemilik RabbitCare
+
+actor "Pemilik / Customer" as Owner
+rectangle "Portal Pemilik" {
+  usecase "Daftar Akun" as Register
+  usecase "Login" as Login
+  usecase "Logout" as Logout
+  usecase "Tambah Profil Kelinci" as AddPet
+  usecase "Ubah Profil Kelinci" as EditPet
+  usecase "Lihat Daftar Kelinci" as ViewPets
+  usecase "Pilih Kelinci" as SelectPet
+  usecase "Pilih Layanan, Tanggal,\ndan Slot" as SelectService
+  usecase "Buat Booking" as CreateBooking
+  usecase "Cek Benturan Slot" as SlotCheck
+  usecase "Pilih Metode Pembayaran" as SelectMethod
+  usecase "Transfer Bank" as Bank
+  usecase "QRIS" as QRIS
+  usecase "E-wallet\nDANA / GoPay / OVO" as Wallet
+  usecase "Isi Nama Pengirim" as Payer
+  usecase "Kirim Pengajuan Pembayaran" as SubmitPay
+  usecase "Lihat Status Booking\ndan Pembayaran" as Status
+  usecase "Lihat Kalender" as Calendar
+  usecase "Lihat Riwayat Medis,\nVaksinasi, dan Grooming" as History
+  usecase "Lihat Reminder Kontrol\ndan Grooming" as Reminder
+}
+
+Owner -- Register
+Owner -- Login
+Owner -- Logout
+Owner -- AddPet
+Owner -- EditPet
+Owner -- ViewPets
+Owner -- CreateBooking
+Owner -- SubmitPay
+Owner -- Status
+Owner -- Calendar
+Owner -- History
+Owner -- Reminder
+
+EditPet .> ViewPets : <<include>>
+CreateBooking .> SelectPet : <<include>>
+CreateBooking .> SelectService : <<include>>
+CreateBooking .> SlotCheck : <<include>>
+SubmitPay .> SelectMethod : <<include>>
+SubmitPay .> Payer : <<include>>
+Bank .> SelectMethod : <<extend>>
+QRIS .> SelectMethod : <<extend>>
+Wallet .> SelectMethod : <<extend>>
+@enduml
