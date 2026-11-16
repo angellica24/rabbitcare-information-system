@@ -1,0 +1,51 @@
+@startuml
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #48664C
+skinparam BorderColor #48664C
+skinparam BackgroundColor #FAFCFA
+skinparam NoteBackgroundColor #FFF7E8
+skinparam NoteBorderColor #D99A43
+
+title Sequence - Check-in dan Pengarahan Petugas
+
+actor Admin
+participant AdminUI as "Portal Admin"
+participant FlowJS as "Admin Flow JS"
+database Store as "localStorage App Data"
+participant DoctorUI as "Dashboard Dokter"
+participant GroomerUI as "Dashboard Groomer"
+
+Admin -> AdminUI : klik Check-in
+AdminUI -> FlowJS : checkInBooking(id)
+FlowJS -> Store : baca booking dan status payment
+Store --> FlowJS : data booking dan payment
+
+alt payment berstatus PAID
+  FlowJS -> FlowJS : buat nomor antrean D-xxx atau G-xxx
+  FlowJS -> Store : simpan status CHECK_IN, checkedInAt, dan queueNumber
+  FlowJS --> AdminUI : check-in berhasil
+
+  Admin -> AdminUI : pilih Arahkan Petugas
+  AdminUI -> FlowJS : kirim role dan nama petugas
+  FlowJS -> Store : simpan assignedRole dan assignedStaff\nstatus DIARAHKAN_DOKTER atau DIARAHKAN_GROOMER
+
+  alt diarahkan ke dokter
+    DoctorUI -> Store : baca antrean assignedRole doctor
+    Store --> DoctorUI : data pasien yang ditugaskan ke dokter
+  else diarahkan ke groomer
+    GroomerUI -> Store : baca antrean assignedRole groomer
+    Store --> GroomerUI : data pasien yang ditugaskan ke groomer
+  end
+else payment belum PAID
+  FlowJS --> AdminUI : check-in ditolak
+  AdminUI --> Admin : pembayaran harus tervalidasi sebelum check-in
+end
+
+note over AdminUI,Store
+Nomor antrean menggunakan prefix D untuk dokter
+dan G untuk groomer. Check-in hanya berhasil
+ketika payment berstatus PAID.
+end note
+@enduml

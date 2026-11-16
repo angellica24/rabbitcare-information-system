@@ -1,0 +1,47 @@
+@startuml
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #48664C
+skinparam BorderColor #48664C
+skinparam BackgroundColor #FAFCFA
+skinparam NoteBackgroundColor #FFF7E8
+skinparam NoteBorderColor #D99A43
+
+title Sequence - Registrasi Pemilik dan Menambah Kelinci
+
+actor Owner as "Pemilik"
+participant UI as "HTML UI"
+participant Auth as "Auth JavaScript"
+database OwnerStore as "localStorage\nrabbitcareOwners"
+participant PetModule as "Pet Profile JS"
+database AppStore as "localStorage\nrabbitcarePrototypeDataV3"
+
+Owner -> UI : Pilih Portal Pemilik dan Daftar
+UI -> Auth : kirim nama, telepon, email, dan password
+Auth -> OwnerStore : periksa email terdaftar
+OwnerStore --> Auth : hasil pemeriksaan
+
+alt email belum terdaftar
+  Auth -> OwnerStore : simpan akun owner
+  Auth --> UI : registrasi berhasil dan session owner aktif
+  UI --> Owner : tampilkan Dashboard Pemilik
+
+  Owner -> UI : Tambah Profil Kelinci
+  UI -> PetModule : kirim data kelinci
+  PetModule -> PetModule : buat pet ID unik
+  PetModule -> AppStore : simpan pet dengan ownerEmail
+  AppStore --> PetModule : data tersimpan
+  PetModule --> UI : refresh profil dan dashboard
+  UI --> Owner : profil kelinci tampil dan siap digunakan untuk booking
+else email sudah terdaftar
+  Auth --> UI : tampilkan pesan email sudah terdaftar
+  UI --> Owner : registrasi tidak dilanjutkan
+end
+
+note over OwnerStore,AppStore
+Prototype menggunakan localStorage pada browser.
+Penyimpanan ini bukan database server dan belum
+mendukung sinkronisasi lintas perangkat.
+end note
+@enduml

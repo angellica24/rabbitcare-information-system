@@ -1,0 +1,58 @@
+@startuml
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #48664C
+skinparam BorderColor #48664C
+skinparam BackgroundColor #FAFCFA
+skinparam NoteBackgroundColor #FFF7E8
+skinparam NoteBorderColor #D99A43
+
+title Sequence - Pemeriksaan Dokter, Riwayat, dan Reminder
+
+actor Doctor as "Dokter"
+participant DoctorUI as "Dashboard/Form Dokter"
+participant MedicalJS as "Medical Record JS"
+database Store as "localStorage App Data"
+participant History as "Riwayat Pemilik"
+participant Calendar as "Kalender dan Reminder"
+participant Manager as "Laporan Manajer (kebutuhan PRD)"
+
+Doctor -> DoctorUI : buka pasien yang ditugaskan kepada dokter
+DoctorUI -> MedicalJS : openDoctorExam(id)
+MedicalJS -> Store : ubah status menjadi SEDANG_DILAYANI
+Store --> DoctorUI : data booking, profil kelinci, dan riwayat
+Doctor -> DoctorUI : isi anamnesis dan pemeriksaan fisik
+
+opt simpan draft pemeriksaan
+  DoctorUI -> MedicalJS : saveDoctorDraft()
+  MedicalJS -> Store : simpan medicalRecord sementara
+  Store --> DoctorUI : draft tersimpan; status tetap aktif
+end
+
+Doctor -> DoctorUI : isi diagnosis, tindakan, resep, dan kontrol
+DoctorUI -> MedicalJS : saveDoctorExam()
+MedicalJS -> MedicalJS : validasi diagnosis dan tindakan wajib
+
+alt data pemeriksaan lengkap
+  MedicalJS -> Store : simpan medicalRecord dan status SELESAI\ncompletedRole doctor
+  opt tanggal kontrol diisi
+    MedicalJS -> Store : buat reminder Kontrol Dokter
+  end
+  History -> Store : baca riwayat medis kelinci
+  Store --> History : medicalRecord terbaru
+  Calendar -> Store : baca booking dan reminder
+  Store --> Calendar : agenda layanan dan dueDate
+  Manager -> Store : baca data operasional untuk laporan
+  Store --> Manager : data pasien, booking, dan pembayaran tervalidasi
+else diagnosis atau tindakan belum lengkap
+  MedicalJS --> DoctorUI : tampilkan pesan data pemeriksaan belum lengkap
+  DoctorUI --> Doctor : lengkapi diagnosis dan tindakan
+end
+
+note over Manager,Store
+Pelaporan manajer tercantum dalam PRD. Dokumen
+analisis menyatakan halaman manajer belum tersedia
+pada dokumentasi screenshot prototype.
+end note
+@enduml

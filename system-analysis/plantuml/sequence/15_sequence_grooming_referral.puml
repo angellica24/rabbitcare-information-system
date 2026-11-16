@@ -1,0 +1,49 @@
+@startuml
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #48664C
+skinparam BorderColor #48664C
+skinparam BackgroundColor #FAFCFA
+skinparam NoteBackgroundColor #FFF7E8
+skinparam NoteBorderColor #D99A43
+
+title Sequence - Grooming, Penyelesaian, atau Rujukan
+
+actor Groomer
+actor Admin
+participant GroomerUI as "Dashboard/Form Groomer"
+participant GroomingJS as "Grooming JS"
+database Store as "localStorage App Data"
+participant AdminUI as "Portal Admin"
+participant History as "Riwayat Pemilik"
+participant Calendar as "Kalender dan Reminder"
+
+Groomer -> GroomerUI : buka pasien yang ditugaskan kepada groomer
+GroomerUI -> GroomingJS : openGroomingForm(id)
+GroomingJS -> Store : ubah status menjadi SEDANG_DILAYANI
+Store --> GroomerUI : data booking dan profil kelinci
+Groomer -> GroomerUI : isi kondisi awal dan hasil pre-check
+
+alt kondisi aman dan tidak perlu rujukan
+  Groomer -> GroomerUI : isi hasil, temuan, dan nextDate jika ada
+  GroomerUI -> GroomingJS : saveGroomingResult()
+  GroomingJS -> Store : simpan groomingRecord; status SELESAI\ncompletedRole groomer
+  opt nextDate tersedia
+    GroomingJS -> Store : buat reminder Grooming Berikutnya
+  end
+  History -> Store : baca riwayat grooming kelinci
+  Store --> History : hasil grooming terbaru
+  Calendar -> Store : baca booking dan reminder
+  Store --> Calendar : agenda layanan dan nextDate
+else kondisi tidak aman atau perlu dokter
+  GroomerUI -> GroomingJS : stopGroomingIntegrated()
+  GroomingJS -> Store : simpan groomingRecord dan referral\nstatus PERLU_RUJUKAN; kosongkan assignedRole
+  Admin -> AdminUI : buka booking berstatus PERLU_RUJUKAN
+  AdminUI -> Store : baca detail referral dan booking
+  Store --> AdminUI : tampilkan detail pasien dan aksi pengarahan
+  Admin -> AdminUI : arahkan pasien ke dokter
+  AdminUI -> Store : simpan assignedRole doctor dan assignedStaff\nstatus DIARAHKAN_DOKTER
+end
+
+@enduml

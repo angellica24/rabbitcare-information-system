@@ -1,0 +1,58 @@
+@startuml
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #48664C
+skinparam BorderColor #48664C
+skinparam BackgroundColor #FAFCFA
+skinparam NoteBackgroundColor #FFF7E8
+skinparam NoteBorderColor #D99A43
+
+title Sequence - Booking, Pembayaran, dan Validasi Admin
+
+actor Owner as "Pemilik"
+participant OwnerUI as "Portal Pemilik"
+participant BookingJS as "Booking JS"
+database Store as "localStorage App Data"
+participant PaymentJS as "Payment JS"
+actor Admin as "Admin"
+participant AdminUI as "Portal Admin"
+
+Owner -> OwnerUI : pilih kelinci, layanan, tanggal, dan slot
+OwnerUI -> BookingJS : confirmBooking()
+BookingJS -> Store : baca pets dan bookings
+Store --> BookingJS : data kelinci dan booking aktif
+BookingJS -> BookingJS : periksa benturan slot
+
+alt slot tersedia
+  BookingJS -> Store : simpan booking dan invoice\nstatus MENUNGGU_PEMBAYARAN; payment UNPAID
+  BookingJS --> OwnerUI : tampilkan tagihan
+
+  Owner -> OwnerUI : pilih bank / QRIS / e-wallet
+  OwnerUI -> PaymentJS : kirim metode dan payerName
+  PaymentJS -> Store : simpan payment SUBMITTED\nbooking MENUNGGU_VALIDASI
+  PaymentJS --> OwnerUI : tampilkan Menunggu Validasi
+
+  Admin -> AdminUI : buka halaman Validasi Pembayaran
+  AdminUI -> Store : baca booking dengan payment SUBMITTED
+  Store --> AdminUI : detail booking dan pengajuan pembayaran
+  alt pembayaran valid
+    Admin -> AdminUI : setujui pembayaran
+    AdminUI -> Store : payment PAID; booking TERKONFIRMASI
+    AdminUI --> Admin : validasi berhasil
+  else pembayaran ditolak
+    Admin -> AdminUI : tolak pembayaran
+    AdminUI -> Store : payment REJECTED; booking MENUNGGU_PEMBAYARAN
+    AdminUI --> Admin : pembayaran ditolak
+  end
+else slot tidak tersedia
+  BookingJS --> OwnerUI : tampilkan Slot Tidak Tersedia
+  OwnerUI --> Owner : pilih tanggal atau slot lain
+end
+
+note over OwnerUI,PaymentJS
+Form pengajuan pembayaran pada prototype hanya
+meminta nama pengirim. Tidak ada field nomor
+resi atau reference transaksi.
+end note
+@enduml
